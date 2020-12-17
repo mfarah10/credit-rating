@@ -1,0 +1,235 @@
+#load the packages needed
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+%matplotlib inline
+import warnings
+warnings.filterwarnings('ignore')
+
+# Load the data from my github account
+url = 'https://raw.githubusercontent.com/mfarah10/credit-rating/main/SP500.txt'
+data = pd.read_csv(url, sep = ',')
+data.head()
+
+#show the columns
+print(data.columns)
+
+# let's see the shape of the dataset
+data.shape
+
+#display the structure
+data.info()
+
+#This returns the numbers of missing values per columns.
+data.isnull().sum()
+
+#drop columns with number of missing values above 4000
+data_new = data[data.columns[data.isnull().sum() < 4000]]
+
+#drop all non-financial features
+data_new = data_new.drop(['permno', 'cusip', 'Ticker', 'adate', 'qdate', 'public_date'], axis = 1)
+
+#let's see result
+data_new.isnull().sum()
+data_new.splticrm.value_counts()
+
+#drop rows with 'CCC' and 'D'
+data_new = data_new[data_new['splticrm'] != 'CCC']
+data_new = data_new[data_new['splticrm'] != 'D']
+data_new
+
+#####################################
+### Training the algorithms
+
+
+#factorize the rating column 'splticrm', so that we have numerical values instead of strings
+data_new['splticrm'] = pd.factorize(data_new.splticrm)[0]
+data_new
+
+#load the package needed
+from sklearn.preprocessing import Imputer
+
+#this will replace the 'NaN' in a cell with the median of the column', I chose median because it won't be affected by outliers.
+imr = Imputer(missing_values = 'NaN', strategy = 'median', axis = 0)
+imr.fit(data_new)
+
+#need the name of the columns, as Imputer will transform the dataset into np.array, 
+#so I need to transform it back into pd.DataFrame using the names as column indexes.
+columns_ = data_new.columns.values
+print(columns_)
+
+#execute Imputer and transform data back to a DataFrame
+data_final = imr.transform(data_new.values)
+data_final = pd.DataFrame(data_final, columns = columns_)
+data_final
+
+#create feature Matrix X that only contains the financial ratios
+X = data_final.iloc[:, 1:]
+X.shape
+
+#check if there are really no missing values
+X.isnull().sum()
+
+#create response vector y
+y = data_final.iloc[:,0]
+y.shape
+
+#import train_test_split package from skelearn
+from sklearn.model_selection import train_test_split
+
+#split the X and y into training and test sets;
+X_train, X_test, y_train, y_test = train_test_split(X,y, test_size = 0.2, random_state = 0, stratify = y )
+
+# RANDOM FORREST
+#load packages
+from sklearn.ensemble import RandomForestClassifier
+from sklearn import metrics
+from sklearn.metrics import accuracy_score
+
+forest = RandomForestClassifier(random_state=1)
+forest.fit(X_train, y_train)
+print('Train Score: ', tree.score(X_train, y_train))
+
+# DECISION TREE
+from sklearn.tree import DecisionTreeClassifier
+
+#max_depth = number of features
+tree = DecisionTreeClassifier(max_depth=28)
+tree.fit(X_train, y_train)
+
+#print the train and text scores
+print('Train Score: ', tree.score(X_train, y_train))
+print('Test Score: ', tree.score(X_test, y_test))
+
+# SVM
+#load the scaler and apply it to training / test set. (only on X!)
+from sklearn.preprocessing import StandardScaler
+sc = StandardScaler()
+
+X_train_std = sc.fit_transform(X_train)
+
+X_test_std = sc.transform(X_test)
+#import model 
+from sklearn.svm import SVC
+
+
+svm_rbf = SVC(kernel='rbf', C =100)
+svm_rbf.fit(X_train_std, y_train)
+print('Train Score: ', svm_rbf.score(X_train_std, y_train))
+print('Test Score: ', svm_rbf.score(X_test_std, y_test))
+
+# XGBOOST
+#import model
+from xgboost import XGBClassifier
+xgb = XGBClassifier()
+xgb.fit(X_train,y_train)
+print('Train Score: ', xgb.score(X_train, y_train))
+print('Test Score: ', xgb.score(X_test, y_test))
+
+# KNN
+#import model and MinMaxScaler to scale the feautures. Works similar to StandardScaler()
+from sklearn.preprocessing import MinMaxScaler
+from sklearn import neighbors
+
+#create object and scale the data (only features)
+mms = MinMaxScaler()
+X_train_norm = mms.fit_transform(X_train)
+X_test_norm = mms.transform(X_test)
+
+#create a plot to see for which k the error rate of the model is the minimum
+error_rate = []
+for i in range(4,40):
+    knn = neighbors.KNeighborsClassifier(n_neighbors = i)
+    knn.fit(X_train_norm, y_train)
+    pred_i = knn.predict(X_test_norm)
+    error_rate.append(np.mean(pred_i != y_test))
+    
+    #plot the error rate against the k's
+plt.figure(figsize=(10,6))
+plt.plot(range(4,40), error_rate, color = 'blue', linestyle = 'dashed', 
+        marker = 'o', markerfacecolor = 'red', markersize = 10)
+
+plt.title('Error Rate versus k Value')
+plt.xlabel('k')
+plt.ylabel('Error Rate')
+
+acc = []
+
+from sklearn import metrics
+for i in range(4,40):
+    neigh = neighbors.KNeighborsClassifier(n_neighbors=i)
+    neigh.fit(X_train_norm, y_train)
+    pred_2 = neigh.predict(X_test_norm)
+    acc.append(metrics.accuracy_score(y_test, pred_2))
+    
+    plt.figure(figsize=(10,6))
+plt.plot(range(4,40), acc,  color = 'red', linestyle = 'dashed', 
+        marker = 'o', markerfacecolor = 'blue', markersize = 10)
+
+plt.title('Accuracy versus k-Value')
+plt.xlabel('k')
+plt.ylabel('Accuracy')
+
+#predict with k = 4
+k = 4
+knn = neighbors.KNeighborsClassifier(n_neighbors = k)
+knn = knn.fit(X_train_norm, y_train)
+
+#save scores in variable
+knn_scores_train = knn.score(X_train_norm, y_train)
+knn_scores_test= knn.score(X_test_norm, y_test)
+
+print('Train Score: ', knn_scores_train)
+print('Test Score: ', knn_scores_test)
+
+
+##########################################################
+# Comparison of the Models
+
+#assign results from the models to a variable each
+forest_predict = forest.score(X_test, y_test)
+tree_predict = tree.score(X_test, y_test)
+svm_predict = svm_rbf.score(X_test_std, y_test)
+xgb_predict = xgb.score(X_test,y_test)
+knn_predict = knn.score(X_test_norm, y_test)
+
+print('Test Score: ', tree.score(X_test, y_test))
+
+#create a list of models and their respective scores
+models_ = []
+models_.append(('R.Forest', forest_predict))
+models_.append(('D. Tree', tree_predict))
+models_.append(('SVM', svm_predict))
+models_.append(('XGB', xgb_predict))
+models_.append(('KNN', knn_predict))
+
+#evaluate each model
+results = []
+names = []
+
+for name, model in models_:
+    results.append(model)
+    names.append(name)
+    print('%s: %f' % (name, model.mean()))
+    
+#transform model names to numericals
+names2 = np.arange(len(names))
+
+#create barplot with names on x-axis and accuracy (scores) on y-axis
+plt.xticks(names2, names)
+plt.bar(names2, results)
+plt.title("Accuracy by model")
+plt.xlabel("Models")
+plt.ylabel("Accuracy")
+plt.figure(figsize=(16,9))
+
+
+from sklearn.metrics import classification_report
+
+pred = xgb.predict(X_test)
+print(classification_report(y_test, pred))
+
+
+# END
+
+##################
