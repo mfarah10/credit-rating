@@ -2,7 +2,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-%matplotlib inline
+
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -88,7 +88,7 @@ from sklearn.metrics import accuracy_score
 
 forest = RandomForestClassifier(random_state=1)
 forest.fit(X_train, y_train)
-print('Train Score: ', tree.score(X_train, y_train))
+print('Train Score: ', forest.score(X_train, y_train))
 
 # DECISION TREE
 from sklearn.tree import DecisionTreeClassifier
@@ -145,14 +145,15 @@ for i in range(4,40):
     error_rate.append(np.mean(pred_i != y_test))
     
     #plot the error rate against the k's
-plt.figure(figsize=(10,6))
+
 plt.plot(range(4,40), error_rate, color = 'blue', linestyle = 'dashed', 
         marker = 'o', markerfacecolor = 'red', markersize = 10)
 
 plt.title('Error Rate versus k Value')
 plt.xlabel('k')
 plt.ylabel('Error Rate')
-
+r = plt.figure(figsize=(10,6))
+r.show()
 acc = []
 
 from sklearn import metrics
@@ -162,13 +163,15 @@ for i in range(4,40):
     pred_2 = neigh.predict(X_test_norm)
     acc.append(metrics.accuracy_score(y_test, pred_2))
     
-    plt.figure(figsize=(10,6))
+#plt.figure(figsize=(10,6))
 plt.plot(range(4,40), acc,  color = 'red', linestyle = 'dashed', 
         marker = 'o', markerfacecolor = 'blue', markersize = 10)
 
 plt.title('Accuracy versus k-Value')
 plt.xlabel('k')
 plt.ylabel('Accuracy')
+f = plt.figure()
+f.show()
 
 #predict with k = 4
 k = 4
@@ -221,13 +224,14 @@ plt.bar(names2, results)
 plt.title("Accuracy by model")
 plt.xlabel("Models")
 plt.ylabel("Accuracy")
-plt.figure(figsize=(16,9))
-
+g = plt.figure(figsize=(16,9))
+g.show()
 
 from sklearn.metrics import classification_report
 
 pred = xgb.predict(X_test)
 print(classification_report(y_test, pred))
+
 
 
 # END
