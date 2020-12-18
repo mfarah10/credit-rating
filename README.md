@@ -1,1 +1,1 @@
-# credit-rating
+In this project, I used Machine Learning Algorithms to predcit a company's credit rating. The ratings were predicted by several ML algorithmns, who were trained using well known financial ratios. Credit Rating agencies such as Moody's or Standard & Poor's also use financial ratios of a company to give them a credit rating. Obviously, the exact models these companies use are not known. In reality, they most likely use more data than just financial ratios such as macroeconomic data and other informatio that are not "known" to the general public.
